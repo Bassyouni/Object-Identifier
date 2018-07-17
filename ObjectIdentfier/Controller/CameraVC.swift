@@ -85,27 +85,34 @@ class CameraVC: UIViewController {
     func resultsMethod(request: VNRequest, error: Error?)
     {
         guard let results = request.results as? [VNClassificationObservation] else { return }
+        
+        var highestConfidence:Float = -1.0
+        var classificationIdentifier: String = ""
+        
         for classification in results
         {
-            if classification.confidence < 0.5
+            if classification.confidence > highestConfidence
             {
-                let unkownObjectMessage = "I'm not sure what this is. Please try again."
-                self.identficationLabel.text = unkownObjectMessage
-                synthesizeSpeech(formString: unkownObjectMessage)
-                self.confidenceLabel.text = ""
-                break
+                highestConfidence = Float(classification.confidence)
+                classificationIdentifier = classification.identifier
             }
-            else
-            {
-                let identfication = classification.identifier
-                let confidence = Int(classification.confidence * 100)
-                self.identficationLabel.text = identfication
-                self.confidenceLabel.text = "CONFIDENCE: \(confidence)%"
-                let completeSentence = "This looks like \(identfication) and I'm \(confidence) percent sure."
-                synthesizeSpeech(formString: completeSentence)
-                break
-            }
-            
+        }
+        
+        if highestConfidence < 0.5
+        {
+            let unkownObjectMessage = "I'm not sure what this is. Please try again."
+            self.identficationLabel.text = unkownObjectMessage
+            synthesizeSpeech(formString: unkownObjectMessage)
+            self.confidenceLabel.text = ""
+        }
+        else
+        {
+            let identfication = classificationIdentifier
+            let confidence = Int(highestConfidence * 100)
+            self.identficationLabel.text = identfication
+            self.confidenceLabel.text = "CONFIDENCE: \(confidence)%"
+            let completeSentence = "This looks like \(identfication) and I'm \(confidence) percent sure."
+            synthesizeSpeech(formString: completeSentence)
         }
     }
     
